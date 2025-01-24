@@ -87,6 +87,11 @@ builder.add_edge(ANSWER, END)
 
 graph = builder.compile()
 
+
+graph = builder.compile()
+print(graph.get_graph().draw_mermaid())
+graph.get_graph().print_ascii()
+
 st.title("LangChain Chat - Interactive QA")
 st.sidebar.title("Chat History")
 
