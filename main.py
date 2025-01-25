@@ -1,97 +1,49 @@
-import streamlit as st
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langgraph.graph import MessageGraph, END
+from langgraph.graph import MessageGraph
+from chains import first_responder, final_responder, global_responder, salary_responder, vacancy_responder
+from classes import FinalResponse
+from langchain_core.messages import BaseMessage
+import json
 from dotenv import load_dotenv
-import os
-from typing import List
+from services.Intranet_repository import IntranetRepository
 
-# Load environment variables
 load_dotenv()
 
-# Define prompts
-reflection_prompt = ChatPromptTemplate.from_messages(
-    [
-        (
-            "system",
-            "You are a knowledgeable expert who verifies the truthfulness of statements. Provide detailed feedback on the accuracy of the user's statement and correct any mistakes.",
-        ),
-        MessagesPlaceholder(variable_name="messages"),
-    ]
-)
+repository = IntranetRepository()
+repository.create_or_load_faiss_index()
 
-general_prompt = ChatPromptTemplate.from_messages(
-    [
-        (
-            "system",
-            "You are a helpful assistant that answers any questions to the best of your ability. Provide clear and concise answers.",
-        ),
-        MessagesPlaceholder(variable_name="messages"),
-    ]
-)
+def event_loop(state: list[BaseMessage]) -> str:
+    last_message = state[-1]
+    if hasattr(last_message, 'additional_kwargs') and 'tool_calls' in last_message.additional_kwargs:
+        tool_calls = last_message.additional_kwargs['tool_calls']
+        if tool_calls:
+            last_tool = tool_calls[-1]
+            arguments = last_tool['function']['arguments']
+            result = json.loads(arguments)
+            if result.get("request_type") == "global_question":
+                return "global"
+            elif result.get("request_type") == "salary_request":
+                return "salary"
+            elif result.get("request_type") == "vacancy_request":
+                return "vacancy"
+    return "final"
 
-# Configure LLM model
-llm = ChatOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-general_chain = general_prompt | llm
-reflect_chain = reflection_prompt | llm
+builder = MessageGraph()
+builder.add_node("classifier", first_responder)
+builder.add_node("global", global_responder)
+builder.add_node("salary", salary_responder)
+builder.add_node("vacancy", vacancy_responder)
+builder.add_node("final", final_responder)
+builder.add_conditional_edges("classifier", event_loop)
+builder.add_edge("global", "final")
+builder.add_edge("salary", "final")
+builder.add_edge("vacancy", "final")
+builder.set_entry_point("draft")
+graph = builder.compile()
 
-# Define nodes for the graph
-def general_node(messages: List[BaseMessage]):
-    """Handles general questions."""
-    return general_chain.invoke({"messages": messages})
-
-def reflection_node(messages: List[BaseMessage]):
-    """Handles reflection/verification of user input."""
-    statement = messages[-1].content
-    res = reflect_chain.invoke({"messages": [HumanMessage(content=statement)]})
-    return [AIMessage(content=res.content)]
-
-# Decision function to verify if the input is a learning instruction
-def should_verify(state: List[BaseMessage]):
-    """Check if the latest message is a learning instruction."""
-    last_message = state[-1].content.lower()
-    if last_message.startswith("learn: "):
-        return "reflect"
-    return "general"
-
-# Initialize Streamlit
-st.title("LangChain Chat - Interactive QA")
-
-# Maintain chat history
-if "history" not in st.session_state:
-    st.session_state.history = []  # List to store message history
-
-# User input
-user_input = st.text_input("Enter your message:", key="user_input", placeholder="Ask a question or provide a learning instruction starting with 'learn:'")
-
-if user_input:
-    # Add user's message to history
-    st.session_state.history.append(HumanMessage(content=user_input))
-
-    # Build the graph
-    builder = MessageGraph()
-    builder.add_node("general", general_node)
-    builder.add_node("reflect", reflection_node)
-    builder.set_entry_point("general")
-
-    # Add conditional edge to decide whether to verify or continue answering general questions
-    builder.add_conditional_edges("general", should_verify)
-    builder.add_edge("reflect", "general")  # Return to general after reflection
-
-    # Compile and run the graph
-    graph = builder.compile()
-    response = graph.invoke(st.session_state.history)
-
-    # Add AI response to history
-    st.session_state.history.append(AIMessage(content=response[-1].content))
-
-    # Display chat response
-    st.markdown(f"**You:** {user_input}")
-    st.markdown(f"**Assistant:** {response[-1].content}")
-
-# Display chat history in the sidebar
-st.sidebar.title("Chat History")
-for msg in st.session_state.history:
-    role = "You" if isinstance(msg, HumanMessage) else "Assistant"
-    st.sidebar.markdown(f"**{role}:** {msg.content}")
+try:
+    response = graph.invoke("tell me about my earnings. my code is abc123")
+    final_result_json = response[-1].content
+    final_result_pydantic = FinalResponse.model_validate_json(final_result_json)
+    print("Final Result (Pydantic):", final_result_pydantic.answer)
+except Exception as e:
+    print("Error during graph execution:", e)

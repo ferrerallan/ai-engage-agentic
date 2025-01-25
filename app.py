@@ -1,71 +1,62 @@
 import streamlit as st
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from dotenv import load_dotenv
-import os
+from chains import first_responder, final_responder, global_responder, salary_responder, vacancy_responder
+from langgraph.graph import MessageGraph
+from classes import FinalResponse
+from services.Intranet_repository import IntranetRepository
+import json
+from langchain_core.messages import BaseMessage, HumanMessage
 
-# Load environment variables
-load_dotenv()
 
-# Define prompts
-reflection_prompt = ChatPromptTemplate.from_messages(
-    [
-        (
-            "system",
-            "You are a viral twitter influencer grading a tweet. Generate critique and recommendations for the user's tweet."
-            " Always provide detailed recommendations, including requests for length, virality, style, etc.",
-        ),
-        MessagesPlaceholder(variable_name="messages"),
-    ]
-)
+repository = IntranetRepository()
+repository.create_or_load_faiss_index()
 
-generation_prompt = ChatPromptTemplate.from_messages(
-    [
-        (
-            "system",
-            "You are a twitter techie influencer assistant tasked with writing excellent twitter posts."
-            " Generate the best twitter post possible for the user's request."
-            " If the user provides critique, respond with a revised version of your previous attempts.",
-        ),
-        MessagesPlaceholder(variable_name="messages"),
-    ]
-)
+def create_graph():
+    builder = MessageGraph()
+    builder.add_node("draft", first_responder)
+    builder.add_node("global", global_responder)
+    builder.add_node("salary", salary_responder)
+    builder.add_node("vacancy", vacancy_responder)
+    builder.add_node("final", final_responder)
+    builder.add_conditional_edges("draft", event_loop)
+    builder.add_edge("global", "final")
+    builder.add_edge("salary", "final")
+    builder.add_edge("vacancy", "final")
+    builder.set_entry_point("draft")
+    return builder.compile()
 
-# Configure LLM model
-llm = ChatOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-generate_chain = generation_prompt | llm
-reflect_chain = reflection_prompt | llm
+def event_loop(state: list[BaseMessage]) -> str:
+    last_message = state[-1]
+    if hasattr(last_message, 'additional_kwargs') and 'tool_calls' in last_message.additional_kwargs:
+        tool_calls = last_message.additional_kwargs['tool_calls']
+        if tool_calls:
+            last_tool = tool_calls[-1]
+            arguments = last_tool['function']['arguments']
+            result = json.loads(arguments)
+            if result.get("request_type") == "global_question":
+                return "global"
+            elif result.get("request_type") == "salary_request":
+                return "salary"
+            elif result.get("request_type") == "vacancy_request":
+                return "vacancy"
+    return "final"
 
-# Initialize Streamlit
-st.title("LangChain Chat - Interactive Conversation")
+def format_message_history(history):
+    return "\n".join([f"User: {msg.content}" for msg in history])
 
-# Maintain chat history
-if "history" not in st.session_state:
-    st.session_state.history = []  # List to store message history
 
-# User input
-user_input = st.text_input("Enter your message:", key="user_input", placeholder="Type something here...")
+# Streamlit interface
+st.title("Delta Logistic Intranet Assistant")
+st.write("Ask a question about company or consult your salary or vacancies, by informing your code.")
 
-# Chat logic
-if user_input:
-    # Add user message to history
-    st.session_state.history.append(HumanMessage(content=user_input))
 
-    # Check if the user wants to end the conversation
-    if user_input.strip().lower() == "bye":
-        st.markdown("**Chat ended. Thank you for participating!**")
-    else:
-        # Process message using the generate_chain
-        ai_response = generate_chain.invoke({"messages": st.session_state.history})
-        st.session_state.history.append(AIMessage(content=ai_response.content))
 
-        # Display chat response
-        st.markdown(f"**You:** {user_input}")
-        st.markdown(f"**Assistant:** {ai_response.content}")
-
-# Display chat history in the sidebar
-st.sidebar.title("Chat History")
-for msg in st.session_state.history:
-    role = "You" if isinstance(msg, HumanMessage) else "Assistant"
-    st.sidebar.markdown(f"**{role}:** {msg.content}")
+query = st.text_input("Enter your question:")
+if query:
+    graph = create_graph()
+    try:
+        response = graph.invoke(HumanMessage(content=query))
+        final_result_json = response[-1].content
+        final_result_pydantic = FinalResponse.model_validate_json(final_result_json)
+        st.success(f"Response: {final_result_pydantic.answer}")
+    except Exception as e:
+        st.error(f"An error occurred: {str(e)}")
