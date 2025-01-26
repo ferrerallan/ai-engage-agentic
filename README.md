@@ -40,25 +40,25 @@ VACANCY_ENDPOINT_URL=http://127.0.0.1:8000/employee/vacancy
 SALARY_ENDPOINT_URL=http://127.0.0.1:8000/employee/payroll
 ```
 
-### Mode of Use
-# Clone the Repository
+## Mode of Use
+### Clone the Repository
 git clone https://github.com/ferrerallan/ai-engage-agentic.git
 cd ai-engage-agentic
 
-# Install Dependencies
+### Install Dependencies
 poetry install
 
-# Run the Backend API
+### Run the Backend API
 bash start_api.ch
 
-# Build the FAISS Index
+### Build the FAISS Index
 python -m services.intranet_repository
 
-# Launch the Chat Application
+### Launch the Chat Application
 bash start_chat.ch
 
 
-### Usage Instructions
+## Usage Instructions
 1. Open the chat interface in your browser.
 
 2. Ask questions about the company, salary details, or vacation balance. Example inputs:
