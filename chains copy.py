@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 import datetime
-from langchain_core.prompts import ChatPromptTemplate,MessagesPlaceholder
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 import requests
 from classes import ClassifyQuestion, FinalResponse, GlobalResponse, SalaryResponse, VacancyResponse
@@ -9,7 +9,6 @@ from langchain_core.messages import ToolMessage
 import json
 from langchain_community.vectorstores import FAISS
 from langchain.document_loaders import TextLoader
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 
 from services.Intranet_repository import IntranetRepository
 
@@ -42,8 +41,7 @@ actor_prompt_template = ChatPromptTemplate.from_messages(
             
             Be flexible in recognizing variations of phrases and contexts, ensuring high accuracy in classification and code extraction..""",
         ),
-        MessagesPlaceholder(variable_name="messages"),
-        ("system", "Answer the last user's question above using the required format, and considering history when needed."),
+        ("user", "{input}"),
     ]
 ).partial(
     time=lambda: datetime.datetime.now().isoformat(),
@@ -103,19 +101,9 @@ def build_prompt_with_context(question, context):
     return prompt
 
 def global_responder_logic(input_message):
-    # Identificar a última mensagem humana no histórico
-    last_human_message = None
-    for message in reversed(input_message):
-        if isinstance(message, HumanMessage):  # Verifica se é uma mensagem humana
-            last_human_message = message.content
-            break
-
-    if not last_human_message:
-        raise ValueError("No human message found in the input messages.")
-
-    # Construir contexto e criar resposta
-    context = query_document(last_human_message, vectorstore)
-    prompt = build_prompt_with_context(last_human_message, context)
+    question = input_message[0].content
+    context = query_document(question, vectorstore)
+    prompt = build_prompt_with_context(question, context)
     response = llm.predict(prompt)
     global_response = GlobalResponse(answer=response)
     return global_response.json()
