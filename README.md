@@ -14,8 +14,6 @@ Key Features:
 
 ### System Requirements
 - **Python**: Version 3.10 or higher
-- **Node.js**: Optional, for advanced deployments
-- **Docker**: Optional, for running vector database services
 
 ### Python Dependencies
 - `python-dotenv`
@@ -40,7 +38,7 @@ LANGCHAIN_TRACING_V2=true
 LANGCHAIN_PROJECT=xxxxxxx
 VACANCY_ENDPOINT_URL=http://127.0.0.1:8000/employee/vacancy
 SALARY_ENDPOINT_URL=http://127.0.0.1:8000/employee/payroll
-
+```
 
 ### Mode of Use
 # Clone the Repository
