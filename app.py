@@ -70,7 +70,6 @@ if query:
     except Exception as e:
         st.session_state.history.append(AIMessage(content=f"An error occurred: {str(e)}"))
 
-# Renderizar histórico no Streamlit
 for message in st.session_state.history:
     if isinstance(message, HumanMessage):
         with st.chat_message("user"):

@@ -51,8 +51,6 @@ poetry install
 ### Run the Backend API
 bash start_api.ch
 
-### Build the FAISS Index
-python -m services.intranet_repository
 
 ### Launch the Chat Application
 bash start_chat.ch
