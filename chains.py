@@ -103,10 +103,9 @@ def build_prompt_with_context(question, context):
     return prompt
 
 def global_responder_logic(input_message):
-    # Identificar a última mensagem humana no histórico
     last_human_message = None
     for message in reversed(input_message):
-        if isinstance(message, HumanMessage):  # Verifica se é uma mensagem humana
+        if isinstance(message, HumanMessage): 
             last_human_message = message.content
             break
 
