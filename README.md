@@ -42,7 +42,7 @@ SALARY_ENDPOINT_URL=http://127.0.0.1:8000/employee/payroll
 
 ## Mode of Use
 ### Clone the Repository
-git clone https://github.com/ferrerallan/ai-engage-agentic.git
+git clone https://github.com/ferrerallan/ai-engage-agentic.git 
 cd ai-engage-agentic
 
 ### Install Dependencies
