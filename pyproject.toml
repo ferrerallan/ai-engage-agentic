@@ -5,7 +5,7 @@ description = ""
 authors = ["Allan Ferreira <ferrerallan@gmail.com>"]
 
 packages = [
-  { include = "ai-engage-agentic" }
+  { include = "appv2 }
 ]
 
 [tool.poetry.dependencies]
