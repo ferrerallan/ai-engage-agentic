@@ -5,7 +5,7 @@ description = ""
 authors = ["Allan Ferreira <ferrerallan@gmail.com>"]
 
 packages = [
-  { include = "appv2 }
+  { include = "appv2" }
 ]
 
 [tool.poetry.dependencies]
