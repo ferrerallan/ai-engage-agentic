@@ -11,12 +11,12 @@ from langchain_community.vectorstores import FAISS
 from langchain.document_loaders import TextLoader
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 
-from services.Intranet_repository import IntranetRepository
+from services.Intranet_repository_s3 import IntranetRepositoryS3
 
 load_dotenv()
 llm = ChatOpenAI(model="gpt-4-turbo-preview")
 
-intranet_repository = IntranetRepository()
+intranet_repository = IntranetRepositoryS3()
 vectorstore = intranet_repository.create_or_load_faiss_index()
 
 ### classifier ###
@@ -82,9 +82,28 @@ def final_responder(input_messages):
 
 ### Global ###
 def query_document(question, vectorstore, k=3):
+    """
+    Query the document repository with a question and return relevant contexts.
+    Includes source information in the results.
+    
+    Args:
+        question (str): The query string
+        vectorstore: The FAISS vectorstore
+        k (int): Number of results to return
+        
+    Returns:
+        str: Concatenated context from relevant documents
+    """
     docs = vectorstore.similarity_search(question, k=k)
     if docs:
-        return "\n".join([doc.page_content for doc in docs])
+        # Format the results to include source information
+        results = []
+        for doc in docs:
+            source = doc.metadata.get('source', 'Unknown')
+            content = doc.page_content
+            results.append(f"[Source: {source}]\n{content}")
+        
+        return "\n\n".join(results)
     return "No relevant information found."
 
 def build_prompt_with_context(question, context):

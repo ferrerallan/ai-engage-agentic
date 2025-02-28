@@ -20,6 +20,9 @@ langchain-community = "^0.3.14"
 fastapi = "^0.115.7"
 uvicorn = "^0.34.0"
 faiss-cpu = "^1.9.0"
+langchain-core = "^0.3.40"
+awscli = "^1.38.3"
+boto3 = "^1.37.3"
 
 [tool.poetry.dev-dependencies]
 

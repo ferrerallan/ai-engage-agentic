@@ -125,6 +125,22 @@ tests = ["cloudpickle", "hypothesis", "mypy (>=1.11.1)", "pympler", "pytest-mypy
 tests-mypy = ["mypy (>=1.11.1)", "pytest-mypy-plugins"]
 
 [[package]]
+name = "awscli"
+version = "1.38.3"
+description = "Universal Command Line Environment for AWS."
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.dependencies]
+botocore = "1.37.3"
+colorama = ">=0.2.5,<0.4.7"
+docutils = ">=0.10,<0.17"
+PyYAML = ">=3.10,<6.1"
+rsa = ">=3.1.2,<4.8"
+s3transfer = ">=0.11.0,<0.12.0"
+
+[[package]]
 name = "backoff"
 version = "2.2.1"
 description = "Function decoration for backoff and retry"
@@ -174,6 +190,38 @@ description = "Fast, simple object-to-object and broadcast signaling"
 category = "main"
 optional = false
 python-versions = ">=3.9"
+
+[[package]]
+name = "boto3"
+version = "1.37.3"
+description = "The AWS SDK for Python"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.dependencies]
+botocore = ">=1.37.3,<1.38.0"
+jmespath = ">=0.7.1,<2.0.0"
+s3transfer = ">=0.11.0,<0.12.0"
+
+[package.extras]
+crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
+
+[[package]]
+name = "botocore"
+version = "1.37.3"
+description = "Low-level, data-driven core of boto 3."
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.dependencies]
+jmespath = ">=0.7.1,<2.0.0"
+python-dateutil = ">=2.1,<3.0.0"
+urllib3 = {version = ">=1.25.4,<2.2.0 || >2.2.0,<3", markers = "python_version >= \"3.10\""}
+
+[package.extras]
+crt = ["awscrt (==0.23.8)"]
 
 [[package]]
 name = "build"
@@ -336,6 +384,14 @@ description = "Distro - an OS platform information API"
 category = "main"
 optional = false
 python-versions = ">=3.6"
+
+[[package]]
+name = "docutils"
+version = "0.16"
+description = "Docutils -- Python Documentation Utilities"
+category = "main"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
 name = "durationpy"
@@ -737,6 +793,14 @@ optional = false
 python-versions = ">=3.8"
 
 [[package]]
+name = "jmespath"
+version = "1.0.1"
+description = "JSON Matching Expressions"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[[package]]
 name = "joblib"
 version = "1.4.2"
 description = "Lightweight pipelining with Python functions"
@@ -867,7 +931,7 @@ tenacity = ">=8.1.0,<8.4.0 || >8.4.0,<10"
 
 [[package]]
 name = "langchain-core"
-version = "0.3.29"
+version = "0.3.40"
 description = "Building applications with LLMs through composability"
 category = "main"
 optional = false
@@ -875,7 +939,7 @@ python-versions = "<4.0,>=3.9"
 
 [package.dependencies]
 jsonpatch = ">=1.33,<2.0"
-langsmith = ">=0.1.125,<0.3"
+langsmith = ">=0.1.125,<0.4"
 packaging = ">=23.2,<25"
 pydantic = [
     {version = ">=2.5.2,<3.0.0", markers = "python_full_version < \"3.12.4\""},
@@ -1841,14 +1905,28 @@ python-versions = ">=3.9"
 
 [[package]]
 name = "rsa"
-version = "4.9"
+version = "4.7.2"
 description = "Pure-Python RSA implementation"
 category = "main"
 optional = false
-python-versions = ">=3.6,<4"
+python-versions = ">=3.5, <4"
 
 [package.dependencies]
 pyasn1 = ">=0.1.3"
+
+[[package]]
+name = "s3transfer"
+version = "0.11.3"
+description = "An Amazon S3 Transfer Manager"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.dependencies]
+botocore = ">=1.36.0,<2.0a.0"
+
+[package.extras]
+crt = ["botocore[crt] (>=1.36.0,<2.0a.0)"]
 
 [[package]]
 name = "safetensors"
@@ -2445,7 +2523,7 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "bf385955ae893f79b24be2a4a37d026c005b2651dea4f01df44714f2f3df89a7"
+content-hash = "0c5229fddad7671da80bbc995532b15e834a39499ac297f31087478d0b544a8a"
 
 [metadata.files]
 aiohappyeyeballs = []
@@ -2457,10 +2535,13 @@ anyio = []
 asgiref = []
 async-timeout = []
 attrs = []
+awscli = []
 backoff = []
 bcrypt = []
 black = []
 blinker = []
+boto3 = []
+botocore = []
 build = []
 cachetools = []
 certifi = []
@@ -2473,6 +2554,7 @@ coloredlogs = []
 dataclasses-json = []
 deprecated = []
 distro = []
+docutils = []
 durationpy = []
 exceptiongroup = []
 faiss-cpu = []
@@ -2501,6 +2583,7 @@ importlib-resources = []
 isort = []
 jinja2 = []
 jiter = []
+jmespath = []
 joblib = []
 jsonpatch = []
 jsonpointer = []
@@ -2588,6 +2671,7 @@ requests-toolbelt = []
 rich = []
 rpds-py = []
 rsa = []
+s3transfer = []
 safetensors = []
 scikit-learn = []
 scipy = []
