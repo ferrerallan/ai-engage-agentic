@@ -4,6 +4,9 @@ version = "0.1.0"
 description = ""
 authors = ["Allan Ferreira <ferrerallan@gmail.com>"]
 
+packages = [
+  { include = "ai-engage-agentic" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.10"
