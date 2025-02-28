@@ -1,8 +1,13 @@
 [tool.poetry]
 name = "ai-engage-agentic"
 version = "0.1.0"
-description = ""
+description = "AI Engage Agentic Project"
 authors = ["Allan Ferreira <ferrerallan@gmail.com>"]
+
+# Add packages configuration
+packages = [
+    { include = "." }  # This includes the entire project directory
+]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -24,8 +29,13 @@ langchain-core = "^0.3.40"
 awscli = "^1.38.3"
 boto3 = "^1.37.3"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.3.1"
+# You can add other development dependencies here
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+# Optional: If you continue to have issues, uncomment the next line
+# package-mode = false
