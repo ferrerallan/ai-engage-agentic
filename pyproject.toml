@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "langgraph-example"
+name = "ai-engage-agentic"
 version = "0.1.0"
 description = ""
 authors = ["Allan Ferreira <ferrerallan@gmail.com>"]
