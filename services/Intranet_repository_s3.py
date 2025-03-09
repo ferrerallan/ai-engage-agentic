@@ -14,7 +14,7 @@ import concurrent.futures
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class IntranetRepositoryS3:
+class IntranetRepository:
     _instance = None  # Singleton instance
     _vectorstore = None 
     
@@ -25,7 +25,7 @@ class IntranetRepositoryS3:
 
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
-            cls._instance = super(IntranetRepositoryS3, cls).__new__(cls)
+            cls._instance = super(IntranetRepository, cls).__new__(cls)
         return cls._instance
 
     def __init__(self, 
@@ -194,21 +194,21 @@ class IntranetRepositoryS3:
         If force_rebuild is True, it will rebuild the index even if it exists.
         """
         # Se temos o vectorstore em memória e não precisamos reconstruir, retorne-o
-        if IntranetRepositoryS3._vectorstore is not None and not force_rebuild:
+        if IntranetRepository._vectorstore is not None and not force_rebuild:
             logger.info("Reusing existing FAISS index from memory.")
-            return IntranetRepositoryS3._vectorstore
+            return IntranetRepository._vectorstore
 
         # Se o índice existir em disco e não precisamos reconstruir, carregue-o
         if os.path.exists(self.index_path) and os.path.isfile(f"{self.index_path}/index.faiss") and not force_rebuild:
             logger.info(f"Loading FAISS index from {self.index_path}")
             try:
-                IntranetRepositoryS3._vectorstore = FAISS.load_local(
+                IntranetRepository._vectorstore = FAISS.load_local(
                     self.index_path,
                     OpenAIEmbeddings(),
                     allow_dangerous_deserialization=True
                 )
                 logger.info("Successfully loaded FAISS index")
-                return IntranetRepositoryS3._vectorstore
+                return IntranetRepository._vectorstore
             except Exception as e:
                 logger.error(f"Error loading FAISS index: {e}")
                 logger.info("Will rebuild the index...")
@@ -244,13 +244,13 @@ class IntranetRepositoryS3:
             batch_size = 100  # Tamanho do lote para criação do índice
             if len(chunks) <= batch_size:
                 # Criar índice diretamente se o número de chunks for pequeno
-                IntranetRepositoryS3._vectorstore = FAISS.from_documents(chunks, embeddings)
+                IntranetRepository._vectorstore = FAISS.from_documents(chunks, embeddings)
             else:
                 # Criar índice por lotes para conjuntos maiores
                 logger.info(f"Creating index in batches of {batch_size} chunks")
                 # Criar primeiro lote
                 first_batch = chunks[:batch_size]
-                IntranetRepositoryS3._vectorstore = FAISS.from_documents(first_batch, embeddings)
+                IntranetRepository._vectorstore = FAISS.from_documents(first_batch, embeddings)
                 
                 # Adicionar lotes restantes
                 for i in range(batch_size, len(chunks), batch_size):
@@ -258,20 +258,20 @@ class IntranetRepositoryS3:
                     logger.info(f"Adding batch {i//batch_size + 1}: chunks {i} to {end_idx}")
                     batch = chunks[i:end_idx]
                     if batch:  # Verificar se o lote não está vazio
-                        IntranetRepositoryS3._vectorstore.add_documents(batch)
+                        IntranetRepository._vectorstore.add_documents(batch)
             
             # Ensure the directory exists
             os.makedirs(self.index_path, exist_ok=True)
             
             # Save the index
-            IntranetRepositoryS3._vectorstore.save_local(self.index_path)
+            IntranetRepository._vectorstore.save_local(self.index_path)
             logger.info(f"FAISS index created and saved to {self.index_path}")
             
             # Clean up temporary directory
             shutil.rmtree(temp_dir)
             logger.info(f"Temporary directory {temp_dir} removed")
             
-            return IntranetRepositoryS3._vectorstore
+            return IntranetRepository._vectorstore
             
         except Exception as e:
             logger.error(f"Error creating FAISS index: {e}")
@@ -281,14 +281,14 @@ class IntranetRepositoryS3:
 
     def query_document(self, question, k=3):
         """Query the FAISS index with a question and return relevant context."""
-        if IntranetRepositoryS3._vectorstore is None:
+        if IntranetRepository._vectorstore is None:
             logger.error("FAISS index is not loaded. Trying to load it now.")
             self.create_or_load_faiss_index()
             
-            if IntranetRepositoryS3._vectorstore is None:
+            if IntranetRepository._vectorstore is None:
                 raise ValueError("Failed to load FAISS index. Call create_or_load_faiss_index first.")
         
-        docs = IntranetRepositoryS3._vectorstore.similarity_search(question, k=k)
+        docs = IntranetRepository._vectorstore.similarity_search(question, k=k)
         
         if docs:
             # Format the results to include source information
@@ -337,7 +337,7 @@ class IntranetRepositoryS3:
         
         # Resetar o vectorstore - IMPORTANTE: resetar a variável de classe
         logger.info("Resetting vector store in memory")
-        IntranetRepositoryS3._vectorstore = None
+        IntranetRepository._vectorstore = None
         
         # Recriar o índice com force_rebuild=True para garantir nova criação
         logger.info("Rebuilding index from scratch")

@@ -2,7 +2,7 @@ import streamlit as st
 from chains import first_responder, final_responder, global_responder, salary_responder, vacancy_responder
 from langgraph.graph import MessageGraph
 from classes import FinalResponse
-from services.Intranet_repository_s3 import IntranetRepositoryS3
+from services.Intranet_repository_s3 import IntranetRepository
 import json
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 import os
@@ -235,7 +235,7 @@ def force_full_reindex(repository, bucket_name):
                     start_time = time.time()
                     
                     # Criar nova instância do repositório
-                    new_repository = IntranetRepositoryS3(bucket_name=bucket_name)
+                    new_repository = IntranetRepository(bucket_name=bucket_name)
                     
                     # Forçar reconstrução do índice
                     vectorstore = new_repository.force_rebuild_index()
@@ -410,7 +410,7 @@ except Exception as e:
 # Configuração do repositório S3
 BUCKET_NAME = "docs-intranet"
 try:
-    repository = IntranetRepositoryS3(bucket_name=BUCKET_NAME)
+    repository = IntranetRepository(bucket_name=BUCKET_NAME)
     st.session_state.repository = repository
     # Carregar vectorstore
     vectorstore = repository.create_or_load_faiss_index()

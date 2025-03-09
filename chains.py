@@ -11,12 +11,12 @@ from langchain_community.vectorstores import FAISS
 from langchain.document_loaders import TextLoader
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 
-from services.Intranet_repository_s3 import IntranetRepositoryS3
+from services.Intranet_repository import IntranetRepository
 
 load_dotenv()
 llm = ChatOpenAI(model="gpt-4-turbo-preview")
 
-intranet_repository = IntranetRepositoryS3()
+intranet_repository = IntranetRepository()
 vectorstore = intranet_repository.create_or_load_faiss_index()
 
 ### classifier ###

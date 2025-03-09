@@ -1,5 +1,5 @@
 import streamlit as st
-from services.Intranet_repository import IntranetRepository
+from services.Intranet_repository_s3 import IntranetRepository
 import os
 import time
 
